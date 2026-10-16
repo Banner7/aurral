@@ -5,12 +5,12 @@ import { logger } from "../logger.js";
 let cachedPath;
 let cachedMtimeMs;
 let cachedKeys;
-let failure;
+let lastWarningKey;
 
 export function getBeetsOwnedTrackKeys() {
   const path = process.env.BEETS_LIBRARY_DB;
   if (!path) {
-    failure = undefined;
+    lastWarningKey = undefined;
     return new Set();
   }
 
@@ -27,22 +27,18 @@ export function getBeetsOwnedTrackKeys() {
       const title = String(row.title || "").trim().toLowerCase();
       if (artist && title) keys.add(`${artist}::${title}`);
     }
-    db.close();
-    db = undefined;
     cachedPath = path;
     cachedMtimeMs = mtimeMs;
     cachedKeys = keys;
-    failure = undefined;
+    lastWarningKey = undefined;
     return keys;
   } catch (error) {
     cachedPath = undefined;
     cachedMtimeMs = undefined;
     cachedKeys = undefined;
-    if (failure?.path !== path || failure?.mtimeMs !== mtimeMs) {
-      failure = { path, mtimeMs, messages: new Set() };
-    }
-    if (!failure.messages.has(error.message)) {
-      failure.messages.add(error.message);
+    const warningKey = `${path}\0${mtimeMs}\0${error.message}`;
+    if (warningKey !== lastWarningKey) {
+      lastWarningKey = warningKey;
       logger.warn("flows", `Beets owned-track check skipped: ${error.message}`);
     }
     return new Set();

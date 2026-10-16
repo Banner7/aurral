@@ -48,7 +48,7 @@ test("unset beets database returns an empty Set without logging", (t) => {
   assert.equal(warn.mock.callCount(), 0);
 });
 
-test("missing beets database warns once, retries, and resets after recovery or path changes", (t) => {
+test("beets failures warn once and reset after recovery, path changes, or mtime changes", (t) => {
   const path = fixture(t);
   process.env.BEETS_LIBRARY_DB = `${path}.missing`;
   const warn = t.mock.method(logger, "warn");
@@ -68,23 +68,19 @@ test("missing beets database warns once, retries, and resets after recovery or p
   process.env.BEETS_LIBRARY_DB = `${path}.another-missing`;
   assert.deepEqual(getBeetsOwnedTrackKeys(), new Set());
   assert.equal(warn.mock.callCount(), 3, "changed path resets warning suppression");
-});
-
-test("beets failure warnings reset when the database mtime changes", (t) => {
-  const path = fixture(t);
+  process.env.BEETS_LIBRARY_DB = path;
   const db = new Database(path);
   db.exec("DROP TABLE items");
   db.close();
-  const warn = t.mock.method(logger, "warn", () => {});
   assert.deepEqual(getBeetsOwnedTrackKeys(), new Set());
   assert.deepEqual(getBeetsOwnedTrackKeys(), new Set());
-  assert.equal(warn.mock.callCount(), 1);
+  assert.equal(warn.mock.callCount(), 4);
   const { mtimeMs } = statSync(path);
   utimesSync(path, new Date(), new Date(mtimeMs + 2000));
   assert.deepEqual(getBeetsOwnedTrackKeys(), new Set());
-  assert.equal(warn.mock.callCount(), 2);
+  assert.equal(warn.mock.callCount(), 5);
   assert.deepEqual(getBeetsOwnedTrackKeys(), new Set());
-  assert.equal(warn.mock.callCount(), 2);
+  assert.equal(warn.mock.callCount(), 5);
 });
 
 test("beets cache reloads after the database mtime changes", (t) => {
