@@ -8,6 +8,7 @@ import { getBlockedArtistKeys } from "../discovery/feedback.js";
 import { mapWithConcurrency } from "../discovery/helpers.js";
 import { getYear } from "../providers/brainzmashRanking.js";
 import { resolveTrackSearchContext } from "../downloadJobs/trackSearchContext.js";
+import { getBeetsOwnedTrackKeys } from "./beetsOwnedTracks.js";
 import {
   buildLibraryReadModel,
 } from "../libraryReadModel.js";
@@ -1650,6 +1651,10 @@ export class FlowTrackSource {
     const feedbackExcludeKeys = this._buildFeedbackExcludeKeys(flow?.ownerUserId);
     const mergedOptions = {
       ...options,
+      excludeTrackKeys: new Set([
+        ...(options?.excludeTrackKeys || []),
+        ...getBeetsOwnedTrackKeys(),
+      ]),
       excludeArtistKeys: [
         ...(Array.isArray(options?.excludeArtistKeys) ? options.excludeArtistKeys : options?.excludeArtistKeys ? [options.excludeArtistKeys] : []),
         ...feedbackExcludeKeys,
@@ -1687,6 +1692,10 @@ export class FlowTrackSource {
     const feedbackExcludeKeys = this._buildFeedbackExcludeKeys(flow?.ownerUserId);
     const mergedOptions = {
       ...options,
+      excludeTrackKeys: new Set([
+        ...(options?.excludeTrackKeys || []),
+        ...getBeetsOwnedTrackKeys(),
+      ]),
       excludeArtistKeys: [
         ...(Array.isArray(options?.excludeArtistKeys) ? options.excludeArtistKeys : options?.excludeArtistKeys ? [options.excludeArtistKeys] : []),
         ...feedbackExcludeKeys,
