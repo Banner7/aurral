@@ -1,0 +1,39 @@
+name: vps1 image
+
+# Fork-only: builds the image vps1 runs (upstream main + beets owned-track
+# exclusion). Tag: ghcr.io/banner7/aurral:vps1-<short sha>.
+on:
+  push:
+    branches: ["vps1"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: meta
+        run: echo "short=${GITHUB_SHA:0:7}" >> "${GITHUB_OUTPUT}"
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/banner7/aurral:vps1-${{ steps.meta.outputs.short }}
+          platforms: linux/amd64
+          build-args: |
+            APP_VERSION=vps1.${{ steps.meta.outputs.short }}
+            GITHUB_REPO=Banner7/aurral
+            RELEASE_CHANNEL=nightly
