@@ -52,6 +52,22 @@ One slider sets the share of each source that is turned on:
 
 The numbers on the slider show how many tracks each source supplies at the current flow size. When you turn a source off, Aurral removes it from the mix. When you turn it on, Aurral adds it back.
 
+### Exclude music already owned in beets
+
+Set `BEETS_LIBRARY_DB` to a beets SQLite library to skip tracks you already own when planning regular flows and their reserves. Artist and title matching ignores case and surrounding whitespace. Release Radar is unchanged.
+
+Mount the database directory read-only so Aurral can see database replacements and SQLite sidecar files:
+
+```yaml
+# Aurral service
+environment:
+  BEETS_LIBRARY_DB: /beets/library.db
+volumes:
+  - /srv/beets:/beets:ro
+```
+
+Aurral opens the database read-only and refreshes its cached track keys when the database modification time changes. If the variable is unset, the check is disabled. If the database cannot be read, Aurral logs a warning and continues without this exclusion.
+
 ## Deep Dive
 
 **Deep Dive** changes which tracks Aurral takes from each artist. When it is off, Aurral uses the artist's top 10 tracks. When it is on, Aurral uses tracks 10 to 25. If an artist has too few tracks in that range, Aurral falls back to the top 10.

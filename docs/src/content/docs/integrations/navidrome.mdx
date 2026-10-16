@@ -64,22 +64,6 @@ To connect Last.fm, ListenBrainz, or Koito, open **Settings > Playback > Scrobbl
 
 Aurral uses the Last.fm API key and secret from **Settings > Connect > Last.fm**. It checks ListenBrainz tokens directly.
 
-## Exclude music already owned in beets
-
-Set `BEETS_LIBRARY_DB` to a beets SQLite library to skip tracks you already own when planning regular flows and their reserves. Artist and title matching ignores case and surrounding whitespace. Release Radar is unchanged.
-
-Mount the database directory read-only so Aurral can see database replacements and SQLite sidecar files:
-
-```yaml
-# Aurral service
-environment:
-  BEETS_LIBRARY_DB: /beets/library.db
-volumes:
-  - /srv/beets:/beets:ro
-```
-
-Aurral opens the database read-only and refreshes its cached track keys when the database modification time changes. If the variable is unset, the check is disabled. If the database cannot be read, Aurral logs a warning and continues without this exclusion.
-
 ## Publish playlists to Navidrome
 
 See [Filesystem and mounts](/getting-started/storage/) for the full layout. The recommended Docker setup mounts the same host media root at `/data` in Aurral and Navidrome:
