@@ -276,6 +276,7 @@ const SETTINGS_SEARCH_METADATA = {
       "Auto-refresh frequency": "daily weekly monthly recommendations",
       "Discovery mode": "safer balanced deeper recommendations",
       "Recommended artists": "number per refresh",
+      "Beets library database": "beets owned music library exclude database path",
       "Recommended playlists": "Discover Weekly Trending Mix Library Blend Listening History Release Radar",
       "Refresh discovery": "update recommendations now",
       "Clear artwork cache": "stored artwork links native library image files reset",

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { RefreshCw, Trash2, X } from "lucide-react";
 import { DotLoader } from "../../../components/DotLoader";
@@ -56,6 +56,23 @@ export function SettingsDiscoverTab({
   const [lastfmBannerDismissed, setLastfmBannerDismissed] = useState(
     readLastfmDiscoverBannerDismissed,
   );
+  const [beetsLibraryDbDraft, setBeetsLibraryDbDraft] = useState(
+    () => String(settings.beetsLibraryDb || "").trim(),
+  );
+
+  useEffect(() => {
+    setBeetsLibraryDbDraft(String(settings.beetsLibraryDb || "").trim());
+  }, [settings.beetsLibraryDb]);
+
+  const commitBeetsLibraryDbDraft = () => {
+    const trimmed = beetsLibraryDbDraft.trim();
+    setBeetsLibraryDbDraft(trimmed);
+    if (trimmed === String(settings.beetsLibraryDb || "").trim()) return;
+    updateSettings({
+      ...settings,
+      beetsLibraryDb: trimmed,
+    });
+  };
 
   const autoRefreshHours = settings.integrations?.lastfm?.discoveryAutoRefreshHours || 168;
   const discoveryMode = settings.integrations?.lastfm?.discoveryMode || "balanced";
@@ -191,6 +208,36 @@ export function SettingsDiscoverTab({
                 updateLastfmDiscovery({
                   discoveryRecommendationsPerRefresh: value,
                 });
+              }}
+            />
+          </SettingsArrFormGroup>
+
+          <SettingsArrFormGroup
+            label="Beets library database"
+            labelFor="discover-beets-library-db"
+            help={
+              <>
+                Flows skip tracks whose artist and title are already in this beets library.
+                Aurral opens it read-only.{" "}
+                {settings.beetsLibraryDbEnv
+                  ? "Leave empty to use the fallback from BEETS_LIBRARY_DB."
+                  : "Leave empty to turn it off."}
+              </>
+            }
+          >
+            <SettingsInput
+              id="discover-beets-library-db"
+              type="text"
+              value={beetsLibraryDbDraft}
+              placeholder={settings.beetsLibraryDbEnv || "/beets/library.db"}
+              spellCheck={false}
+              onChange={(e) => setBeetsLibraryDbDraft(e.target.value)}
+              onBlur={commitBeetsLibraryDbDraft}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  commitBeetsLibraryDbDraft();
+                }
               }}
             />
           </SettingsArrFormGroup>

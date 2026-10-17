@@ -25,6 +25,7 @@ import { mergePlexIntegration } from "./plexSettings.js";
 import { getNewsSettings, normalizeNewsFeeds, normalizeNewsGroups } from "../../../services/apiClients/config.js";
 import { normalizeQualityProfile } from "../../../services/qualityProfileModel.js";
 import { getMusicDataSourceName } from "../../../services/musicDataSource/index.js";
+import { validateBeetsLibraryDb } from "../../../services/flows/beetsOwnedTracks.js";
 
 function mergeIntegrations(existing, input, keys) {
   const merged = { ...existing, ...input };
@@ -102,6 +103,8 @@ export function registerGeneral(router) {
         rootWarnings: resolveLibraryRootWarnings(settings),
         downloadFolderPath:
           settings.downloadFolderPath || resolveDownloadRoot(),
+        beetsLibraryDb: settings.beetsLibraryDb || "",
+        beetsLibraryDbEnv: process.env.BEETS_LIBRARY_DB || "",
         integrations: {
           ...(settings.integrations || {}),
           ytdlp: {
@@ -130,6 +133,7 @@ export function registerGeneral(router) {
         integrations,
         rootFolderPath,
         downloadFolderPath,
+        beetsLibraryDb,
         pathMappings,
         security,
         playlistArtwork,
@@ -149,8 +153,20 @@ export function registerGeneral(router) {
           error: `reviewTimeoutHours must be a whole number from 0 to ${MAX_REVIEW_TIMEOUT_HOURS}`,
         });
       }
-
       const currentSettings = dbOps.getSettings();
+      let normalizedBeetsLibraryDb;
+      if (beetsLibraryDb !== undefined) {
+        normalizedBeetsLibraryDb =
+          typeof beetsLibraryDb === "string" ? beetsLibraryDb.trim() : undefined;
+        if (normalizedBeetsLibraryDb !== (currentSettings.beetsLibraryDb || "")) {
+          const validation = validateBeetsLibraryDb(beetsLibraryDb);
+          if (!validation.valid) {
+            return res.status(400).json({ error: validation.error });
+          }
+          normalizedBeetsLibraryDb = validation.path;
+        }
+      }
+
       const localBypassWasEnabled =
         currentSettings?.security?.localNetworkBypass?.enabled === true;
       const lidarrExternalUrl = integrations?.lidarr?.externalUrl;
@@ -501,6 +517,10 @@ export function registerGeneral(router) {
           downloadFolderPath !== undefined
             ? downloadFolderPath
             : currentSettings.downloadFolderPath || null,
+        beetsLibraryDb:
+          normalizedBeetsLibraryDb !== undefined
+            ? normalizedBeetsLibraryDb
+            : currentSettings.beetsLibraryDb || "",
         pathMappings:
           pathMappings !== undefined
             ? normalizePathMappings(pathMappings)

@@ -1,14 +1,42 @@
 import { statSync } from "node:fs";
+import { isAbsolute } from "node:path";
 import Database from "better-sqlite3";
 import { logger } from "../logger.js";
+import { dbOps } from "../../db/helpers/settings.js";
 
 let cachedPath;
 let cachedMtimeMs;
 let cachedKeys;
 let lastWarningKey;
 
+export function validateBeetsLibraryDb(value) {
+  if (typeof value !== "string") {
+    return { valid: false, error: "Beets library database path must be a string" };
+  }
+  const path = value.trim();
+  if (!path) return { valid: true, path };
+  if (!isAbsolute(path)) {
+    return { valid: false, error: "Beets library database path must be absolute" };
+  }
+
+  let db;
+  try {
+    db = new Database(path, { readonly: true, fileMustExist: true });
+    const table = db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'items'").get();
+    const columns = db.pragma("table_info(items)");
+    if (!table || !["artist", "title"].every((name) => columns.some((column) => column.name === name))) {
+      return { valid: false, error: "Beets library database must have an items table with artist and title columns" };
+    }
+    return { valid: true, path };
+  } catch (error) {
+    return { valid: false, error: `Beets library database could not be opened as read-only SQLite: ${error.message}` };
+  } finally {
+    if (db?.open) db.close();
+  }
+}
+
 export function getBeetsOwnedTrackKeys() {
-  const path = process.env.BEETS_LIBRARY_DB;
+  const path = dbOps.getBeetsLibraryDb() || process.env.BEETS_LIBRARY_DB;
   if (!path) {
     lastWarningKey = undefined;
     return new Set();

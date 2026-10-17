@@ -113,6 +113,10 @@ export const dbOps = {
     return dbHelpers.parseJSON(getSettingStmt.get(key)?.value) || null;
   },
 
+  getBeetsLibraryDb() {
+    return getSettingStmt.get("beetsLibraryDb")?.value || "";
+  },
+
   setJSONSetting(key, value) {
     upsertSettingStmt.run(key, dbHelpers.stringifyJSON(value));
   },
@@ -240,6 +244,7 @@ export const dbOps = {
           : { localNetworkBypass: { enabled: false } },
       rootFolderPath: rootFolderPath || null,
       downloadFolderPath: downloadFolderPath || null,
+      beetsLibraryDb: dbOps.getBeetsLibraryDb(),
       pathMappings,
       releaseTypes: releaseTypes || [],
       flows: flows || null,
@@ -370,6 +375,14 @@ export const dbOps = {
           }
           upsertSettingStmt.run("downloadFolderPath", validation.path);
           syncDownloadFolderPath(validation.path);
+        }
+      }
+      if (settings.beetsLibraryDb !== undefined) {
+        const normalized = String(settings.beetsLibraryDb || "").trim();
+        if (normalized) {
+          upsertSettingStmt.run("beetsLibraryDb", normalized);
+        } else {
+          deleteSettingStmt.run("beetsLibraryDb");
         }
       }
       if (settings.pathMappings !== undefined) {
