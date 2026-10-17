@@ -54,19 +54,22 @@ The numbers on the slider show how many tracks each source supplies at the curre
 
 ### Exclude music already owned in beets
 
-Set `BEETS_LIBRARY_DB` to a beets SQLite library to skip tracks you already own when planning regular flows and their reserves. Artist and title matching ignores case and surrounding whitespace. Release Radar is unchanged.
+In **Settings → Discover → Beets library database**, enter the absolute path to your beets `library.db` as seen by Aurral. Regular flows and their reserves skip tracks you already own in this library. Artist and title matching ignores case and surrounding whitespace. Release Radar is unchanged.
+
+When the setting is empty, Aurral falls back to `BEETS_LIBRARY_DB`. Leave both unset to disable the check.
 
 Mount the database directory read-only so Aurral can see database replacements and SQLite sidecar files:
 
 ```yaml
 # Aurral service
+# Optional fallback when the setting is empty
 environment:
   BEETS_LIBRARY_DB: /beets/library.db
 volumes:
   - /srv/beets:/beets:ro
 ```
 
-Aurral opens the database read-only and refreshes its cached track keys when the database modification time changes. If the variable is unset, the check is disabled. If the database cannot be read, Aurral logs a warning and continues without this exclusion.
+Aurral opens the database read-only and refreshes its cached track keys when the database modification time changes. If the database cannot be read, Aurral logs a warning and continues without this exclusion.
 
 ## Deep Dive
 

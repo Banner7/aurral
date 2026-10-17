@@ -37,6 +37,7 @@ export const normalizeSettings = (savedSettings) => {
       favoriteAutoKeep: savedSettings.subsonic?.favoriteAutoKeep !== false,
     },
     downloadFolderPath: String(savedSettings.downloadFolderPath || "").trim(),
+    beetsLibraryDb: String(savedSettings.beetsLibraryDb || "").trim(),
     reviewTimeoutHours: Number.isInteger(savedSettings.reviewTimeoutHours)
       ? savedSettings.reviewTimeoutHours
       : 0,

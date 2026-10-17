@@ -33,6 +33,7 @@ const defaultSettings = {
   },
   rootFolderPath: "",
   downloadFolderPath: "",
+  beetsLibraryDb: "",
   pathMappings: [],
   quality: "standard",
   qualityProfile: {
@@ -467,7 +468,10 @@ export function useSettingsData(showSuccess, showError, showInfo, activeTab) {
         return true;
       } catch (err) {
         if (mountedRef.current) {
-          showError("Failed to save settings: " + err.message);
+          showError(
+            "Failed to save settings: " +
+              (err.response?.data?.message || err.response?.data?.error || err.message),
+          );
         }
         return false;
       }
